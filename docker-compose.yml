@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+      - "8501:8501"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=sqlite:///data/emails.db
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+    command: python main.py --api
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  dashboard:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=sqlite:///data/emails.db
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+      - app
+    command: streamlit run dashboard/app.py --server.port=8501 --server.address=0.0.0.0
